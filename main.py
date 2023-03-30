@@ -43,14 +43,19 @@ def read_root():
 
 @app.get("/posts")
 def get_post():
-    return {"Data": personal_data}
+    cursor.execute("""SELECT * FROM data""")
+    post = cursor.fetchall()
+    return {"Data": post}
 
 @app.post("/posts",status_code = status.HTTP_201_CREATED)
 def create_post(post: Post):
-    post_dict = post.dict()
+    '''post_dict = post.dict()
     post_dict['id'] = random.randrange(0,100000)
-    personal_data.append(post_dict)
-    return {"Data" : post_dict}
+    personal_data.append(post_dict)'''
+    cursor.execute("""INSERT INTO data (name,gender,married,age) VALUES (%s,%s,%s,%s) RETURNING *""",(post.name,post.gender,post.married,post.age))
+    new_data = cursor.fetchone()
+    conn.commit()
+    return {"Data" : new_data}
 
 @app.get("/posts/latest")
 def get_latest_postr():
@@ -59,9 +64,11 @@ def get_latest_postr():
 
 @app.get("/posts/{id}")
 def get_post(id : int, response : Response):
-    post = find_id(id)
+    cursor.execute("""SELECT * FROM data WHERE id = %s""",(str(id)))
+    post = cursor.fetchone()
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f"post with {id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with {id} not found")
+    #post = find_id(id)
     return {"ID" : post}
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
