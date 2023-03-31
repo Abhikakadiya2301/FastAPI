@@ -1,4 +1,3 @@
-import random
 import time
 from fastapi import FastAPI,Response,status,HTTPException
 from pydantic import BaseModel
@@ -19,6 +18,13 @@ while True:
         print("Connection Failed!!")
         print("Error:",error)
         time.sleep(2)
+
+class respo_data(BaseModel):
+    id : int
+    name : str
+    gender : str
+    class Config:
+        orm_model = True
 class Post(BaseModel):
     name : str
     gender : str
