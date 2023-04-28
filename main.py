@@ -1,11 +1,18 @@
-from fastapi import FastAPI,HTTPException,Response,status
+from fastapi import FastAPI,HTTPException,Response,status,Depends
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
+import time
+import model
+from sqlalchemy.orm import Session
+from database import *
+
+model.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
 
 while True:
     try:
@@ -30,6 +37,9 @@ my_posts = [{"title" : "title 1", "content" : "Content of post 1","id" : 1},{"ti
 def root():
     return {"message" : "Hello World!!"}
 
+@app.get("/sqlalchemy")
+def test_posts(db:Session = Depends(get_db)):
+    return {"status" : "Success"}
 def find_post(id):
     for i in my_posts:
         if i["id"] == id:
