@@ -3,7 +3,6 @@ from sqlalchemy import Column,Integer,String,TIMESTAMP,text,Boolean
 from sqlalchemy.sql.expression import null,true
 class Post(Base):
     __tablename__ = "posts"
-
     id = Column(Integer,nullable=False,primary_key=True)
     title = Column(String,nullable=False)
     content = Column(String,nullable=False)

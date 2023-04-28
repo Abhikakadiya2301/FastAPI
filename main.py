@@ -39,7 +39,8 @@ def root():
 
 @app.get("/sqlalchemy")
 def test_posts(db:Session = Depends(get_db)):
-    return {"status" : "Success"}
+    posts = db.query(model.Post).all()
+    return {"status" : posts}
 def find_post(id):
     for i in my_posts:
         if i["id"] == id:
@@ -50,28 +51,32 @@ def find_post_indexx(id):
         if p['id'] == id:
             return i
 @app.get("/posts")
-def get_posts():
-    cursor.execute("""SELECT * FROM posts""")
+def get_posts(db:Session = Depends(get_db)):
+    '''cursor.execute("""SELECT * FROM posts""")
     all_posts = cursor.fetchall()
-    print(all_posts)
-    return {"post": all_posts}
+    print(all_posts)'''
+    posts = db.query(model.Post).all()
+    return {"post": posts}
 @app.post("/posts",status_code = status.HTTP_201_CREATED)
-def create_posts(post : Post):
-    """post_dict = post.dict()
-    post_dict['id'] = randrange(0,10000)
-    my_posts.append(post_dict)"""
-    cursor.execute("""INSERT INTO posts (title,content,published) VALUES (%s,%s,%s) RETURNING *""",(post.title,post.content,post.published))
+def create_posts(post : Post,db:Session = Depends(get_db)):
+    '''cursor.execute("""INSERT INTO posts (title,content,published) VALUES (%s,%s,%s) RETURNING *""",(post.title,post.content,post.published))
     new_post = cursor.fetchone()
     conn.commit()
-    print(new_post)
+    print(new_post)'''
+    new_post = model.Post(title = post.title,content = post.content,published = post.published)
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
     return {"data" : new_post}
 
 @app.get("/posts/{id}",status_code = status.HTTP_404_NOT_FOUND)
-def get_post(id : int):
+def get_post(id : int, db:Session = Depends(get_db)):
     #post = find_post(id)
-    cursor.execute("""SELECT * FROM posts WHERE id = %s""",(str(id),))
-    post = cursor.fetchone()
-    print(post)
+    #cursor.execute("""SELECT * FROM posts WHERE id = %s""",(str(id),))
+    """post = cursor.fetchone()
+    print(post)"""
+    post = db.query(model.Post).filter(model.Post.id).first()
+
     if post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Post Does not exist")
     return {"post" : post}
