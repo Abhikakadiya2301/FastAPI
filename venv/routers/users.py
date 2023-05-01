@@ -4,9 +4,9 @@ from sqlalchemy.orm import Session
 from database import *
 from typing import List
 
-router = APIRouter()
+router = APIRouter(prefix="/users",tags=["Users"])
 
-@router.post("/users",status_code = status.HTTP_201_CREATED,response_model=schemas.UserRespo)
+@router.post("/",status_code = status.HTTP_201_CREATED,response_model=schemas.UserRespo)
 def create_posts(user : schemas.User,db:Session = Depends(get_db)):
 
     hased_pwd = hash(user.password)
@@ -15,7 +15,7 @@ def create_posts(user : schemas.User,db:Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     return new_user
-@router.get("/users/{id}",response_model=schemas.UserRespo)
+@router.get("/{id}",response_model=schemas.UserRespo)
 def get_user(id : int,db:Session = Depends(get_db)):
     user = db.query(model.User).filter(model.User.id == id).first()
     if not user:

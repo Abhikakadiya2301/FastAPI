@@ -37,3 +37,4 @@ def find_post_indexx(id):
 
 app.include_router(posts.router)
 app.include_router(users.router)
+app.include_routeer(auth.router)
