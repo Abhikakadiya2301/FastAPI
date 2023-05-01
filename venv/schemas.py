@@ -29,5 +29,5 @@ class UserRespo(BaseModel):
         orm_mode = True
 
 class UserLogin(BaseModel):
-    email : str
+    email : EmailStr
     password : str
