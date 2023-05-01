@@ -75,8 +75,7 @@ def get_post(id : int, db:Session = Depends(get_db)):
     #cursor.execute("""SELECT * FROM posts WHERE id = %s""",(str(id),))
     """post = cursor.fetchone()
     print(post)"""
-    post = db.query(model.Post).filter(model.Post.id).first()
-
+    post = db.query(model.Post).filter(model.Post.id == id).first()
     if post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Post Does not exist")
     return {"post" : post}
