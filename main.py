@@ -99,10 +99,12 @@ def update_post(id:int,post:Post,db:Session = Depends(get_db)):
     #cursor.execute("""UPDATE posts SET title = %s,content = %s,published=%s WHERE id = %s RETURNING *""",(post.title,post.content,post.published,str(id)))
     #updated = cursor.fetchone()
     #conn.commit()
-    updated_post = db.query(model.Post).filter(model.Post.id == id)
-    updated_post.first()
-    if not updated_post:
+    updated_post_query = db.query(model.Post).filter(model.Post.id == id)
+    updated_post = updated_post_query.first()
+
+    if updated_post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="post did not found")
-    updated_post.update(post.dict())
+    updated_post_query.update(post.dict())
     db.commit()
     return {"data" : updated_post}
+
