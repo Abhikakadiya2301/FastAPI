@@ -3,11 +3,13 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
 from typing import List
+from passlib.context import CryptContext
 import model,schemas
 from sqlalchemy.orm import Session
 from database import *
 
 model.Base.metadata.create_all(bind=engine)
+pwd_context = CryptContext(schemes=["bcrypt"],deprecated="auto")
 app = FastAPI()
 
 while True:
@@ -94,10 +96,11 @@ def update_post(id:int,post:schemas.Post,db:Session = Depends(get_db)):
     db.commit()
     return updated_post
 
-@app.post("/users",status_code = status.HTTP_201_CREATED,response_model=schemas.User)
+@app.post("/users",status_code = status.HTTP_201_CREATED,response_model=schemas.UserRespo)
 def create_posts(user : schemas.User,db:Session = Depends(get_db)):
 
-    new_user = model.User(email = user.email,password = user.password)
+    hased_pwd = pwd_context.hash(user.password)
+    new_user = model.User(email = user.email,password = hased_pwd)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
