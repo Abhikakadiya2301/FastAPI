@@ -1,4 +1,6 @@
 from fastapi import FastAPI, HTTPException, Response, status, Depends,APIRouter
+
+import OAuth2
 import model, schemas, utils
 from sqlalchemy.orm import Session
 from database import *
@@ -14,11 +16,12 @@ def get_posts(db:Session = Depends(get_db)):
     posts = db.query(model.Post).all()
     return posts
 @router.post("/",status_code = status.HTTP_201_CREATED,response_model=schemas.PostResponse)
-def create_posts(post : schemas.Postcreate,db:Session = Depends(get_db)):
+def create_posts(post : schemas.Postcreate,db:Session = Depends(get_db),user_id:int = Depends(OAuth2.get_current_user)):
     '''cursor.execute("""INSERT INTO posts (title,content,published) VALUES (%s,%s,%s) RETURNING *""",(post.title,post.content,post.published))
     new_post = cursor.fetchone()
     conn.commit()
     print(new_post)'''
+    print(user_id)
     new_post = model.Post(title = post.title,content = post.content,published = post.published)
     db.add(new_post)
     db.commit()
