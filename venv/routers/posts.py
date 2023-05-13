@@ -12,7 +12,7 @@ def get_posts(db:Session = Depends(get_db),current_user :int = Depends(OAuth2.ge
     '''cursor.execute("""SELECT * FROM posts""")
     all_posts = cursor.fetchall()
     print(all_posts)'''
-    posts = db.query(model.Post).all()
+    posts = db.query(model.Post).filter(model.Post.owner_id == current_user.id).all()
     return posts
 @router.post("/",status_code = status.HTTP_201_CREATED,response_model=schemas.PostResponse)
 def create_posts(post : schemas.Postcreate,db:Session = Depends(get_db),current_user:int = Depends(OAuth2.get_current_user)):
@@ -20,14 +20,14 @@ def create_posts(post : schemas.Postcreate,db:Session = Depends(get_db),current_
     new_post = cursor.fetchone()
     conn.commit()
     print(new_post)'''
-    print(current_user.email)
-    new_post = model.Post(title = post.title,content = post.content,published = post.published)
+    print(current_user.id)
+    new_post = model.Post(owner_id = current_user.id,title = post.title,content = post.content,published = post.published)
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
     return new_post
 
-@router.get("/{id}",status_code = status.HTTP_404_NOT_FOUND,response_model=schemas.PostResponse)
+@router.get("/{id}",response_model=schemas.PostResponse)
 def get_post(id : int, db:Session = Depends(get_db),current_user:int = Depends(OAuth2.get_current_user)):
     #post = find_post(id)
     #cursor.execute("""SELECT * FROM posts WHERE id = %s""",(str(id),))
@@ -46,8 +46,11 @@ def delete_post(id : int,db:Session = Depends(get_db),current_user:int = Depends
     """deleted_post = cursor.fetchone()
     conn.commit()"""
     deleted_post = db.query(model.Post).filter(model.Post.id == id)
-    if deleted_post.first() == None:
+    post = deleted_post.first()
+    if post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post does not exist")
+    if post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Not Authorised")
     deleted_post.delete()
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT),deleted_post
@@ -63,6 +66,8 @@ def update_post(id:int,post:schemas.Post,db:Session = Depends(get_db),current_us
 
     if updated_post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="post did not found")
+    if updated_post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Not Authorised")
     updated_post_query.update(post.dict())
     db.commit()
     return updated_post
