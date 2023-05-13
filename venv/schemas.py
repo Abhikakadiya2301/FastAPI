@@ -9,12 +9,18 @@ class Post(BaseModel):
 class Postcreate(Post):
     pass
 
+class UserRespo(BaseModel):
+    email : EmailStr
+    id: int
+    class Config:
+        orm_mode = True
 class PostResponse(BaseModel):
     id : int
     title : str
     content : str
     published : bool
     owner_id: int
+    owner : UserRespo
     class Config:
         orm_mode = True
 
@@ -24,11 +30,7 @@ class User(BaseModel):
 
     class Config:
         orm_mode = True
-class UserRespo(BaseModel):
-    email : EmailStr
-    id: int
-    class Config:
-        orm_mode = True
+
 
 class UserLogin(BaseModel):
     email : EmailStr
