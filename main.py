@@ -2,9 +2,11 @@ from fastapi import FastAPI
 import model
 from database import *
 from routers import posts,users,auth
+from Config import settings
 
 model.Base.metadata.create_all(bind=engine)
 app = FastAPI()
+
 
 @app.get("/")
 def root():
