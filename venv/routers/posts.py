@@ -4,23 +4,24 @@ import model, schemas, utils
 from sqlalchemy.orm import Session
 from database import *
 from typing import List,Optional
+from sqlalchemy import func
 
 router = APIRouter(prefix="/posts",tags=["Posts"])
 
-@router.get("/",response_model=List[schemas.PostResponse])
+@router.get("/",response_model=List[schemas.PostOut])
 def get_posts(db:Session = Depends(get_db),current_user :int = Depends(OAuth2.get_current_user),limit: int = 10,skip:int = 0,search: Optional[str] = ""):
     '''cursor.execute("""SELECT * FROM posts""")
     all_posts = cursor.fetchall()
     print(all_posts)'''
     posts = db.query(model.Post).filter(model.Post.title.contains(search)).limit(limit).offset(skip).all()
-    return posts
+    result = db.query(model.Post,func.count(model.Vote.post_id).label("votes")).join(model.Vote,model.Vote.post_id == model.Post.id,isouter=True).group_by(model.Post.id).all()
+    return result
 @router.post("/",status_code = status.HTTP_201_CREATED,response_model=schemas.PostResponse)
 def create_posts(post : schemas.Postcreate,db:Session = Depends(get_db),current_user:int = Depends(OAuth2.get_current_user)):
     '''cursor.execute("""INSERT INTO posts (title,content,published) VALUES (%s,%s,%s) RETURNING *""",(post.title,post.content,post.published))
     new_post = cursor.fetchone()
     conn.commit()
     print(new_post)'''
-    print(current_user.id)
     new_post = model.Post(owner_id = current_user.id,title = post.title,content = post.content,published = post.published)
     db.add(new_post)
     db.commit()
