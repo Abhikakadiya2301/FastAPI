@@ -8,14 +8,15 @@ from sqlalchemy import func
 
 router = APIRouter(prefix="/posts",tags=["Posts"])
 
-@router.get("/",response_model=List[schemas.PostOut])
+@router.get("/",response_model=List[schemas.VotesRespo])
 def get_posts(db:Session = Depends(get_db),current_user :int = Depends(OAuth2.get_current_user),limit: int = 10,skip:int = 0,search: Optional[str] = ""):
     '''cursor.execute("""SELECT * FROM posts""")
     all_posts = cursor.fetchall()
     print(all_posts)'''
     posts = db.query(model.Post).filter(model.Post.title.contains(search)).limit(limit).offset(skip).all()
-    result = db.query(model.Post,func.count(model.Vote.post_id).label("votes")).join(model.Vote,model.Vote.post_id == model.Post.id,isouter=True).group_by(model.Post.id).all()
+    result = db.query(model.Post,func.count(model.Vote.post_id).label("votes")).join(model.Vote,model.Post.id == model.Vote.post_id,isouter=True).group_by(model.Post.id).all()
     return result
+    #return posts
 @router.post("/",status_code = status.HTTP_201_CREATED,response_model=schemas.PostResponse)
 def create_posts(post : schemas.Postcreate,db:Session = Depends(get_db),current_user:int = Depends(OAuth2.get_current_user)):
     '''cursor.execute("""INSERT INTO posts (title,content,published) VALUES (%s,%s,%s) RETURNING *""",(post.title,post.content,post.published))
